@@ -7,7 +7,7 @@ Aplicación web educativa para explorar los 118 elementos químicos con datos ci
 
 ## 📱 Acceso Rápido
 <p align="center">
-  <img src="assets/qr-code.png" width="200" alt="Código QR">
+  <img src="assets/elementqr_qr.png" width="200" alt="Código QR">
   <br>
   <em>Escanea el código QR para acceder desde tu móvil</em>
 </p>
