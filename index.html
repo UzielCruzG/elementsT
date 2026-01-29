@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElementaQR - Tabla Periódica Interactiva</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Explora los elementos químicos de forma interactiva con animaciones y datos científicos completos">
+    <meta name="theme-color" content="#00f5ff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ElementaQR">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="ElementaQR - Tabla Periódica Interactiva">
+    <meta property="og:description" content="Explora los elementos químicos de forma interactiva">
+    <meta property="og:image" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 630'><rect width='1200' height='630' fill='%230a0e27'/><text x='600' y='350' font-size='120' text-anchor='middle' fill='%2300f5ff' font-family='Arial, sans-serif' font-weight='900'>ELEMENTAQR</text></svg>">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ElementaQR - Tabla Periódica Interactiva">
+    <meta name="twitter:description" content="Explora los elementos químicos de forma interactiva">
+    
+    <!-- React & ReactDOM desde CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #151b3d;
+            --bg-card: #1a2142;
+            --accent-cyan: #00f5ff;
+            --accent-magenta: #ff00ff;
+            --accent-yellow: #ffff00;
+            --text-primary: #ffffff;
+            --text-secondary: #b4b9d6;
+            --glow: 0 0 20px rgba(0, 245, 255, 0.5);
+            
+            /* Colores por categoría */
+            --metal-alcalino: #cc80ff;
+            --metal-alcalinoterreo: #8aff00;
+            --metal-transicion: #e06633;
+            --post-transicion: #bfa6a6;
+            --metaloide: #f0c8a0;
+            --no-metal: #3050f8;
+            --halogeno: #1ff01f;
+            --gas-noble: #80d1e3;
+            --lantanido: #ffbfff;
+            --actinido: #ff99cc;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1428 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 245, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 0, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: var(--glow);
+            margin-bottom: 10px;
+            letter-spacing: 4px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-out 0.2s backwards;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(26, 33, 66, 0.8);
+            border: 2px solid rgba(0, 245, 255, 0.3);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 12px 24px;
+            background: rgba(26, 33, 66, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 245, 255, 0.2);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+            border-color: transparent;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+        }
+
+        .periodic-table {
+            display: grid;
+            grid-template-columns: repeat(18, 1fr);
+            gap: 8px;
+            margin-bottom: 40px;
+            animation: fadeIn 1.2s ease-out 0.4s backwards;
+        }
+
+        .element-card {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, rgba(26, 33, 66, 0.9), rgba(21, 27, 61, 0.9));
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .element-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .element-card:hover::before {
+            opacity: 1;
+        }
+
+        .element-card:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 245, 255, 0.3);
+            border-color: var(--accent-cyan);
+            z-index: 10;
+        }
+
+        .element-card.dimmed {
+            opacity: 0.3;
+            filter: grayscale(0.8);
+        }
+
+        .element-number {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .element-symbol {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.2rem, 2vw, 2rem);
+            font-weight: 900;
+            text-align: center;
+            margin: 8px 0;
+            color: var(--text-primary);
+        }
+
+        .element-name {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .element-mass {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        /* Estilos por categoría */
+        .element-card.metal-alcalino {
+            border-color: var(--metal-alcalino);
+        }
+        .element-card.metal-alcalino .element-symbol {
+            color: var(--metal-alcalino);
+            text-shadow: 0 0 10px rgba(204, 128, 255, 0.5);
+        }
+
+        .element-card.metal-alcalinoterreo {
+            border-color: var(--metal-alcalinoterreo);
+        }
+        .element-card.metal-alcalinoterreo .element-symbol {
+            color: var(--metal-alcalinoterreo);
+            text-shadow: 0 0 10px rgba(138, 255, 0, 0.5);
+        }
+
+        .element-card.metal-transicion {
+            border-color: var(--metal-transicion);
+        }
+        .element-card.metal-transicion .element-symbol {
+            color: var(--metal-transicion);
+            text-shadow: 0 0 10px rgba(224, 102, 51, 0.5);
+        }
+
+        .element-card.post-transicion {
+            border-color: var(--post-transicion);
+        }
+        .element-card.post-transicion .element-symbol {
+            color: var(--post-transicion);
+            text-shadow: 0 0 10px rgba(191, 166, 166, 0.5);
+        }
+
+        .element-card.metaloide {
+            border-color: var(--metaloide);
+        }
+        .element-card.metaloide .element-symbol {
+            color: var(--metaloide);
+            text-shadow: 0 0 10px rgba(240, 200, 160, 0.5);
+        }
+
+        .element-card.no-metal {
+            border-color: var(--no-metal);
+        }
+        .element-card.no-metal .element-symbol {
+            color: var(--no-metal);
+            text-shadow: 0 0 10px rgba(48, 80, 248, 0.5);
+        }
+
+        .element-card.halogeno {
+            border-color: var(--halogeno);
+        }
+        .element-card.halogeno .element-symbol {
+            color: var(--halogeno);
+            text-shadow: 0 0 10px rgba(31, 240, 31, 0.5);
+        }
+
+        .element-card.gas-noble {
+            border-color: var(--gas-noble);
+        }
+        .element-card.gas-noble .element-symbol {
+            color: var(--gas-noble);
+            text-shadow: 0 0 10px rgba(128, 209, 227, 0.5);
+        }
+
+        .element-card.actinido {
+            border-color: var(--actinido);
+        }
+        .element-card.actinido .element-symbol {
+            color: var(--actinido);
+            text-shadow: 0 0 10px rgba(255, 153, 204, 0.5);
+        }
+
+        /* Posicionamiento especial para lantánidos y actínidos */
+        .spacer {
+            grid-column: span 1;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
+            padding: 20px;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, rgba(26, 33, 66, 0.95), rgba(21, 27, 61, 0.95));
+            border: 2px solid var(--accent-cyan);
+            border-radius: 24px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 20px 60px rgba(0, 245, 255, 0.3);
+        }
+
+        .modal-header {
+            padding: 40px 40px 20px 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid rgba(255, 0, 0, 0.5);
+            color: #ff4444;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 0, 0, 0.4);
+            transform: rotate(90deg);
+        }
+
+        .modal-element-header {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .modal-element-symbol {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 6rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .modal-element-info h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .modal-element-number {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .modal-category {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(0, 245, 255, 0.2);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .modal-body {
+            padding: 30px 40px 40px 40px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-item {
+            background: rgba(21, 27, 61, 0.5);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--accent-cyan);
+            border-left: 4px solid var(--accent-cyan);
+            padding-left: 15px;
+        }
+
+        .electron-config {
+            background: rgba(21, 27, 61, 0.5);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            color: var(--accent-yellow);
+            text-align: center;
+        }
+
+        .orbital-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 15px;
+            padding: 30px;
+            background: rgba(21, 27, 61, 0.5);
+            border-radius: 12px;
+            min-height: 200px;
+        }
+
+        .orbital {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .orbital-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .electron-shell {
+            width: 50px;
+            height: 50px;
+            border: 2px solid var(--accent-cyan);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 245, 255, 0.1);
+            position: relative;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .electron {
+            width: 12px;
+            height: 12px;
+            background: var(--accent-magenta);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-magenta);
+            animation: orbit 3s linear infinite;
+        }
+
+        .uses-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .use-tag {
+            padding: 8px 16px;
+            background: rgba(0, 245, 255, 0.1);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .curiosity-box {
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.1), rgba(0, 245, 255, 0.1));
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 0, 255, 0.3);
+            font-style: italic;
+            line-height: 1.6;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(26, 33, 66, 0.5);
+            border-radius: 12px;
+            animation: fadeIn 1.4s ease-out 0.6s backwards;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid;
+        }
+
+        .legend-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes orbit {
+            from {
+                transform: rotate(0deg) translateX(15px) rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg) translateX(15px) rotate(-360deg);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .periodic-table {
+                grid-template-columns: repeat(18, minmax(50px, 1fr));
+                gap: 6px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .periodic-table {
+                display: block;
+                columns: 1;
+            }
+
+            .element-card {
+                display: inline-flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 15px;
+                width: 100%;
+                margin-bottom: 10px;
+                padding: 15px;
+                aspect-ratio: auto;
+            }
+
+            .element-symbol {
+                font-size: 2rem !important;
+                margin: 0 !important;
+            }
+
+            .element-name, .element-mass {
+                text-align: left;
+            }
+
+            .modal {
+                margin: 10px;
+            }
+
+            .modal-header {
+                padding: 30px 20px 15px 20px;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+
+            .modal-element-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .modal-element-symbol {
+                font-size: 4rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .orbital-diagram {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(26, 33, 66, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Datos de elementos químicos
+        const elementsData = [
+  {
+    "numero": 1,
+    "simbolo": "H",
+    "nombre": "Hidrógeno",
+    "masaAtomica": 1.008,
+    "categoria": "no-metal",
+    "grupo": 1,
+    "periodo": 1,
+    "bloque": "s",
+    "electronegatividad": 2.20,
+    "radioAtomico": 53,
+    "energiaIonizacion": 1312,
+    "configuracionElectronica": "1s¹",
+    "electronsPorCapa": [1],
+    "puntoFusion": -259.16,
+    "puntoEbullicion": -252.87,
+    "densidad": 0.00008988,
+    "estadoEstandar": "gas",
+    "descubrimiento": {
+      "año": 1766,
+      "descubridor": "Henry Cavendish"
+    },
+    "abundancia": "0.14% en corteza terrestre",
+    "usos": ["Combustible espacial", "Fertilizantes", "Hidrogenación de grasas", "Producción de amoníaco"],
+    "curiosidad": "El elemento más abundante del universo (75% de la masa)",
+    "toxicidad": "baja",
+    "estadoNatural": "Gas diatómico (H₂)",
+    "color": "#ffffff"
+  },
+  {
+    "numero": 2,
+    "simbolo": "He",
+    "nombre": "Helio",
+    "masaAtomica": 4.003,
+    "categoria": "gas-noble",
+    "grupo": 18,
+    "periodo": 1,
+    "bloque": "s",
+    "electronegatividad": null,
+    "radioAtomico": 31,
+    "energiaIonizacion": 2372,
+    "configuracionElectronica": "1s²",
+    "electronsPorCapa": [2],
+    "puntoFusion": -272.2,
+    "puntoEbullicion": -268.93,
+    "densidad": 0.0001785,
+    "estadoEstandar": "gas",
+    "descubrimiento": {
+      "año": 1868,
+      "descubridor": "Pierre Janssen, Norman Lockyer"
+    },
+    "abundancia": "0.000055% en corteza terrestre",
+    "usos": ["Globos aerostáticos", "Criogenia", "Resonancia magnética", "Buceo profundo"],
+    "curiosidad": "Segundo elemento más abundante del universo. No reacciona con nada",
+    "toxicidad": "nula",
+    "estadoNatural": "Gas monoatómico",
+    "color": "#d9ffff"
+  },
+  {
+    "numero": 3,
+    "simbolo": "Li",
+    "nombre": "Litio",
+    "masaAtomica": 6.94,
+    "categoria": "metal-alcalino",
+    "grupo": 1,
+    "periodo": 2,
+    "bloque": "s",
+    "electronegatividad": 0.98,
+    "radioAtomico": 167,
+    "energiaIonizacion": 520,
+    "configuracionElectronica": "1s² 2s¹",
+    "electronsPorCapa": [2, 1],
+    "puntoFusion": 180.54,
+    "puntoEbullicion": 1342,
+    "densidad": 0.534,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": 1817,
+      "descubridor": "Johan August Arfwedson"
+    },
+    "abundancia": "0.002% en corteza terrestre",
+    "usos": ["Baterías recargables", "Medicamentos psiquiátricos", "Cerámicas", "Lubricantes"],
+    "curiosidad": "El metal sólido más ligero. Flota en el agua",
+    "toxicidad": "media",
+    "estadoNatural": "Metal blando plateado",
+    "color": "#cc80ff"
+  },
+  {
+    "numero": 4,
+    "simbolo": "Be",
+    "nombre": "Berilio",
+    "masaAtomica": 9.012,
+    "categoria": "metal-alcalinoterreo",
+    "grupo": 2,
+    "periodo": 2,
+    "bloque": "s",
+    "electronegatividad": 1.57,
+    "radioAtomico": 112,
+    "energiaIonizacion": 899,
+    "configuracionElectronica": "1s² 2s²",
+    "electronsPorCapa": [2, 2],
+    "puntoFusion": 1287,
+    "puntoEbullicion": 2471,
+    "densidad": 1.85,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": 1798,
+      "descubridor": "Louis-Nicolas Vauquelin"
+    },
+    "abundancia": "0.00028% en corteza terrestre",
+    "usos": ["Aleaciones aeroespaciales", "Rayos X", "Herramientas antichispa"],
+    "curiosidad": "Extremadamente tóxico en forma de polvo",
+    "toxicidad": "alta",
+    "estadoNatural": "Metal gris acero",
+    "color": "#c2ff00"
+  },
+  {
+    "numero": 5,
+    "simbolo": "B",
+    "nombre": "Boro",
+    "masaAtomica": 10.81,
+    "categoria": "metaloide",
+    "grupo": 13,
+    "periodo": 2,
+    "bloque": "p",
+    "electronegatividad": 2.04,
+    "radioAtomico": 87,
+    "energiaIonizacion": 801,
+    "configuracionElectronica": "1s² 2s² 2p¹",
+    "electronsPorCapa": [2, 3],
+    "puntoFusion": 2075,
+    "puntoEbullicion": 4000,
+    "densidad": 2.34,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": 1808,
+      "descubridor": "Joseph Louis Gay-Lussac, Louis Jacques Thénard"
+    },
+    "abundancia": "0.001% en corteza terrestre",
+    "usos": ["Fibra de vidrio", "Detergentes", "Reactores nucleares"],
+    "curiosidad": "Esencial para las plantas pero no para animales",
+    "toxicidad": "baja",
+    "estadoNatural": "Sólido negro amorfo o cristalino",
+    "color": "#ffb5b5"
+  },
+  {
+    "numero": 6,
+    "simbolo": "C",
+    "nombre": "Carbono",
+    "masaAtomica": 12.011,
+    "categoria": "no-metal",
+    "grupo": 14,
+    "periodo": 2,
+    "bloque": "p",
+    "electronegatividad": 2.55,
+    "radioAtomico": 67,
+    "energiaIonizacion": 1087,
+    "configuracionElectronica": "1s² 2s² 2p²",
+    "electronsPorCapa": [2, 4],
+    "puntoFusion": 3550,
+    "puntoEbullicion": 4027,
+    "densidad": 2.267,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": "Prehistórico",
+      "descubridor": "Conocido desde la antigüedad"
+    },
+    "abundancia": "0.025% en corteza terrestre",
+    "usos": ["Base de la vida orgánica", "Acero", "Diamantes", "Grafito", "Nanotubos"],
+    "curiosidad": "Forma más compuestos que cualquier otro elemento excepto hidrógeno",
+    "toxicidad": "baja",
+    "estadoNatural": "Grafito negro o diamante transparente",
+    "color": "#909090"
+  },
+  {
+    "numero": 7,
+    "simbolo": "N",
+    "nombre": "Nitrógeno",
+    "masaAtomica": 14.007,
+    "categoria": "no-metal",
+    "grupo": 15,
+    "periodo": 2,
+    "bloque": "p",
+    "electronegatividad": 3.04,
+    "radioAtomico": 56,
+    "energiaIonizacion": 1402,
+    "configuracionElectronica": "1s² 2s² 2p³",
+    "electronsPorCapa": [2, 5],
+    "puntoFusion": -210.1,
+    "puntoEbullicion": -195.79,
+    "densidad": 0.0012506,
+    "estadoEstandar": "gas",
+    "descubrimiento": {
+      "año": 1772,
+      "descubridor": "Daniel Rutherford"
+    },
+    "abundancia": "0.0025% en corteza terrestre",
+    "usos": ["Fertilizantes", "Explosivos", "Criogenia", "Atmósfera inerte"],
+    "curiosidad": "78% del aire que respiramos",
+    "toxicidad": "baja",
+    "estadoNatural": "Gas diatómico (N₂)",
+    "color": "#3050f8"
+  },
+  {
+    "numero": 8,
+    "simbolo": "O",
+    "nombre": "Oxígeno",
+    "masaAtomica": 15.999,
+    "categoria": "no-metal",
+    "grupo": 16,
+    "periodo": 2,
+    "bloque": "p",
+    "electronegatividad": 3.44,
+    "radioAtomico": 48,
+    "energiaIonizacion": 1314,
+    "configuracionElectronica": "1s² 2s² 2p⁴",
+    "electronsPorCapa": [2, 6],
+    "puntoFusion": -218.79,
+    "puntoEbullicion": -182.96,
+    "densidad": 0.001429,
+    "estadoEstandar": "gas",
+    "descubrimiento": {
+      "año": 1774,
+      "descubridor": "Joseph Priestley, Carl Wilhelm Scheele"
+    },
+    "abundancia": "46% en corteza terrestre",
+    "usos": ["Respiración", "Combustión", "Oxidación", "Medicina"],
+    "curiosidad": "El elemento más abundante en la corteza terrestre",
+    "toxicidad": "nula",
+    "estadoNatural": "Gas diatómico (O₂)",
+    "color": "#ff0d0d"
+  },
+  {
+    "numero": 9,
+    "simbolo": "F",
+    "nombre": "Flúor",
+    "masaAtomica": 18.998,
+    "categoria": "halogeno",
+    "grupo": 17,
+    "periodo": 2,
+    "bloque": "p",
+    "electronegatividad": 3.98,
+    "radioAtomico": 42,
+    "energiaIonizacion": 1681,
+    "configuracionElectronica": "1s² 2s² 2p⁵",
+    "electronsPorCapa": [2, 7],
+    "puntoFusion": -219.67,
+    "puntoEbullicion": -188.11,
+    "densidad": 0.001696,
+    "estadoEstandar": "gas",
+    "descubrimiento": {
+      "año": 1886,
+      "descubridor": "Henri Moissan"
+    },
+    "abundancia": "0.054% en corteza terrestre",
+    "usos": ["Pasta dental", "Teflón", "Refrigerantes", "Enriquecimiento de uranio"],
+    "curiosidad": "El elemento más electronegativo y reactivo",
+    "toxicidad": "alta",
+    "estadoNatural": "Gas diatómico amarillo pálido",
+    "color": "#90e050"
+  },
+  {
+    "numero": 10,
+    "simbolo": "Ne",
+    "nombre": "Neón",
+    "masaAtomica": 20.180,
+    "categoria": "gas-noble",
+    "grupo": 18,
+    "periodo": 2,
+    "bloque": "p",
+    "electronegatividad": null,
+    "radioAtomico": 38,
+    "energiaIonizacion": 2081,
+    "configuracionElectronica": "1s² 2s² 2p⁶",
+    "electronsPorCapa": [2, 8],
+    "puntoFusion": -248.59,
+    "puntoEbullicion": -246.08,
+    "densidad": 0.0008999,
+    "estadoEstandar": "gas",
+    "descubrimiento": {
+      "año": 1898,
+      "descubridor": "William Ramsay, Morris Travers"
+    },
+    "abundancia": "0.0000003% en corteza terrestre",
+    "usos": ["Iluminación de neón", "Láseres", "Indicadores de alto voltaje"],
+    "curiosidad": "Produce luz roja-naranja característica en tubos de descarga",
+    "toxicidad": "nula",
+    "estadoNatural": "Gas monoatómico incoloro",
+    "color": "#b3e3f5"
+  },
+  {
+    "numero": 11,
+    "simbolo": "Na",
+    "nombre": "Sodio",
+    "masaAtomica": 22.990,
+    "categoria": "metal-alcalino",
+    "grupo": 1,
+    "periodo": 3,
+    "bloque": "s",
+    "electronegatividad": 0.93,
+    "radioAtomico": 190,
+    "energiaIonizacion": 496,
+    "configuracionElectronica": "[Ne] 3s¹",
+    "electronsPorCapa": [2, 8, 1],
+    "puntoFusion": 97.72,
+    "puntoEbullicion": 883,
+    "densidad": 0.971,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": 1807,
+      "descubridor": "Humphry Davy"
+    },
+    "abundancia": "2.3% en corteza terrestre",
+    "usos": ["Sal de mesa (NaCl)", "Lámparas de vapor", "Refrigerante nuclear"],
+    "curiosidad": "Reacciona violentamente con el agua produciendo hidrógeno",
+    "toxicidad": "media",
+    "estadoNatural": "Metal blando plateado",
+    "color": "#ab5cf2"
+  },
+  {
+    "numero": 12,
+    "simbolo": "Mg",
+    "nombre": "Magnesio",
+    "masaAtomica": 24.305,
+    "categoria": "metal-alcalinoterreo",
+    "grupo": 2,
+    "periodo": 3,
+    "bloque": "s",
+    "electronegatividad": 1.31,
+    "radioAtomico": 145,
+    "energiaIonizacion": 738,
+    "configuracionElectronica": "[Ne] 3s²",
+    "electronsPorCapa": [2, 8, 2],
+    "puntoFusion": 650,
+    "puntoEbullicion": 1090,
+    "densidad": 1.738,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": 1755,
+      "descubridor": "Joseph Black"
+    },
+    "abundancia": "2.1% en corteza terrestre",
+    "usos": ["Aleaciones ligeras", "Fuegos artificiales", "Suplementos nutricionales"],
+    "curiosidad": "Arde con una luz blanca brillante e intensa",
+    "toxicidad": "baja",
+    "estadoNatural": "Metal gris plateado",
+    "color": "#8aff00"
+  },
+  {
+    "numero": 13,
+    "simbolo": "Al",
+    "nombre": "Aluminio",
+    "masaAtomica": 26.982,
+    "categoria": "post-transicion",
+    "grupo": 13,
+    "periodo": 3,
+    "bloque": "p",
+    "electronegatividad": 1.61,
+    "radioAtomico": 118,
+    "energiaIonizacion": 578,
+    "configuracionElectronica": "[Ne] 3s² 3p¹",
+    "electronsPorCapa": [2, 8, 3],
+    "puntoFusion": 660.32,
+    "puntoEbullicion": 2519,
+    "densidad": 2.698,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": 1825,
+      "descubridor": "Hans Christian Ørsted"
+    },
+    "abundancia": "8.1% en corteza terrestre",
+    "usos": ["Envases", "Construcción", "Cables eléctricos", "Aeronáutica"],
+    "curiosidad": "El metal más abundante en la corteza terrestre",
+    "toxicidad": "baja",
+    "estadoNatural": "Metal plateado ligero",
+    "color": "#bfa6a6"
+  },
+  {
+    "numero": 14,
+    "simbolo": "Si",
+    "nombre": "Silicio",
+    "masaAtomica": 28.085,
+    "categoria": "metaloide",
+    "grupo": 14,
+    "periodo": 3,
+    "bloque": "p",
+    "electronegatividad": 1.90,
+    "radioAtomico": 111,
+    "energiaIonizacion": 787,
+    "configuracionElectronica": "[Ne] 3s² 3p²",
+    "electronsPorCapa": [2, 8, 4],
+    "puntoFusion": 1414,
+    "puntoEbullicion": 3265,
+    "densidad": 2.3296,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": 1824,
+      "descubridor": "Jöns Jacob Berzelius"
+    },
+    "abundancia": "27.7% en corteza terrestre",
+    "usos": ["Semiconductores", "Chips informáticos", "Vidrio", "Silicona"],
+    "curiosidad": "Base de toda la industria electrónica moderna",
+    "toxicidad": "baja",
+    "estadoNatural": "Sólido cristalino gris azulado",
+    "color": "#f0c8a0"
+  },
+  {
+    "numero": 15,
+    "simbolo": "P",
+    "nombre": "Fósforo",
+    "masaAtomica": 30.974,
+    "categoria": "no-metal",
+    "grupo": 15,
+    "periodo": 3,
+    "bloque": "p",
+    "electronegatividad": 2.19,
+    "radioAtomico": 98,
+    "energiaIonizacion": 1012,
+    "configuracionElectronica": "[Ne] 3s² 3p³",
+    "electronsPorCapa": [2, 8, 5],
+    "puntoFusion": 44.15,
+    "puntoEbullicion": 280.5,
+    "densidad": 1.82,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": 1669,
+      "descubridor": "Hennig Brand"
+    },
+    "abundancia": "0.105% en corteza terrestre",
+    "usos": ["Fertilizantes", "Detergentes", "Cerillas", "DNA/RNA"],
+    "curiosidad": "El fósforo blanco es altamente inflamable y tóxico",
+    "toxicidad": "alta",
+    "estadoNatural": "Sólido ceroso (blanco) o polvo (rojo)",
+    "color": "#ff8000"
+  },
+  {
+    "numero": 16,
+    "simbolo": "S",
+    "nombre": "Azufre",
+    "masaAtomica": 32.06,
+    "categoria": "no-metal",
+    "grupo": 16,
+    "periodo": 3,
+    "bloque": "p",
+    "electronegatividad": 2.58,
+    "radioAtomico": 88,
+    "energiaIonizacion": 1000,
+    "configuracionElectronica": "[Ne] 3s² 3p⁴",
+    "electronsPorCapa": [2, 8, 6],
+    "puntoFusion": 115.21,
+    "puntoEbullicion": 444.6,
+    "densidad": 2.067,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": "Prehistórico",
+      "descubridor": "Conocido desde la antigüedad"
+    },
+    "abundancia": "0.042% en corteza terrestre",
+    "usos": ["Ácido sulfúrico", "Fertilizantes", "Pólvora", "Vulcanización del caucho"],
+    "curiosidad": "Huele a huevo podrido cuando se combina con hidrógeno",
+    "toxicidad": "baja",
+    "estadoNatural": "Sólido cristalino amarillo",
+    "color": "#ffff30"
+  },
+  {
+    "numero": 17,
+    "simbolo": "Cl",
+    "nombre": "Cloro",
+    "masaAtomica": 35.45,
+    "categoria": "halogeno",
+    "grupo": 17,
+    "periodo": 3,
+    "bloque": "p",
+    "electronegatividad": 3.16,
+    "radioAtomico": 79,
+    "energiaIonizacion": 1251,
+    "configuracionElectronica": "[Ne] 3s² 3p⁵",
+    "electronsPorCapa": [2, 8, 7],
+    "puntoFusion": -101.5,
+    "puntoEbullicion": -34.04,
+    "densidad": 0.003214,
+    "estadoEstandar": "gas",
+    "descubrimiento": {
+      "año": 1774,
+      "descubridor": "Carl Wilhelm Scheele"
+    },
+    "abundancia": "0.017% en corteza terrestre",
+    "usos": ["Desinfección del agua", "Lejía", "PVC", "Sal de mesa"],
+    "curiosidad": "Usado como arma química en la Primera Guerra Mundial",
+    "toxicidad": "alta",
+    "estadoNatural": "Gas diatómico amarillo verdoso",
+    "color": "#1ff01f"
+  },
+  {
+    "numero": 18,
+    "simbolo": "Ar",
+    "nombre": "Argón",
+    "masaAtomica": 39.948,
+    "categoria": "gas-noble",
+    "grupo": 18,
+    "periodo": 3,
+    "bloque": "p",
+    "electronegatividad": null,
+    "radioAtomico": 71,
+    "energiaIonizacion": 1521,
+    "configuracionElectronica": "[Ne] 3s² 3p⁶",
+    "electronsPorCapa": [2, 8, 8],
+    "puntoFusion": -189.34,
+    "puntoEbullicion": -185.85,
+    "densidad": 0.0017837,
+    "estadoEstandar": "gas",
+    "descubrimiento": {
+      "año": 1894,
+      "descubridor": "Lord Rayleigh, William Ramsay"
+    },
+    "abundancia": "0.00015% en corteza terrestre",
+    "usos": ["Soldadura", "Lámparas incandescentes", "Conservación de documentos"],
+    "curiosidad": "El tercer gas más abundante en la atmósfera terrestre (0.93%)",
+    "toxicidad": "nula",
+    "estadoNatural": "Gas monoatómico incoloro",
+    "color": "#80d1e3"
+  },
+  {
+    "numero": 19,
+    "simbolo": "K",
+    "nombre": "Potasio",
+    "masaAtomica": 39.098,
+    "categoria": "metal-alcalino",
+    "grupo": 1,
+    "periodo": 4,
+    "bloque": "s",
+    "electronegatividad": 0.82,
+    "radioAtomico": 243,
+    "energiaIonizacion": 419,
+    "configuracionElectronica": "[Ar] 4s¹",
+    "electronsPorCapa": [2, 8, 8, 1],
+    "puntoFusion": 63.38,
+    "puntoEbullicion": 759,
+    "densidad": 0.862,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": 1807,
+      "descubridor": "Humphry Davy"
+    },
+    "abundancia": "2.1% en corteza terrestre",
+    "usos": ["Fertilizantes", "Pólvora", "Función celular", "Regulación cardíaca"],
+    "curiosidad": "Tan reactivo que se guarda en aceite para evitar contacto con aire",
+    "toxicidad": "media",
+    "estadoNatural": "Metal blando plateado",
+    "color": "#8f40d4"
+  },
+  {
+    "numero": 20,
+    "simbolo": "Ca",
+    "nombre": "Calcio",
+    "masaAtomica": 40.078,
+    "categoria": "metal-alcalinoterreo",
+    "grupo": 2,
+    "periodo": 4,
+    "bloque": "s",
+    "electronegatividad": 1.00,
+    "radioAtomico": 194,
+    "energiaIonizacion": 590,
+    "configuracionElectronica": "[Ar] 4s²",
+    "electronsPorCapa": [2, 8, 8, 2],
+    "puntoFusion": 842,
+    "puntoEbullicion": 1484,
+    "densidad": 1.54,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": 1808,
+      "descubridor": "Humphry Davy"
+    },
+    "abundancia": "4.1% en corteza terrestre",
+    "usos": ["Huesos y dientes", "Cemento", "Yeso", "Suplementos nutricionales"],
+    "curiosidad": "El quinto elemento más abundante en la corteza terrestre",
+    "toxicidad": "baja",
+    "estadoNatural": "Metal plateado",
+    "color": "#3dff00"
+  },
+  {
+    "numero": 26,
+    "simbolo": "Fe",
+    "nombre": "Hierro",
+    "masaAtomica": 55.845,
+    "categoria": "metal-transicion",
+    "grupo": 8,
+    "periodo": 4,
+    "bloque": "d",
+    "electronegatividad": 1.83,
+    "radioAtomico": 156,
+    "energiaIonizacion": 762,
+    "configuracionElectronica": "[Ar] 3d⁶ 4s²",
+    "electronsPorCapa": [2, 8, 14, 2],
+    "puntoFusion": 1538,
+    "puntoEbullicion": 2861,
+    "densidad": 7.874,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": "Prehistórico",
+      "descubridor": "Conocido desde la antigüedad"
+    },
+    "abundancia": "5.6% en corteza terrestre",
+    "usos": ["Acero", "Construcción", "Hemoglobina", "Herramientas"],
+    "curiosidad": "El metal más usado en todo el mundo",
+    "toxicidad": "baja",
+    "estadoNatural": "Metal gris plateado magnético",
+    "color": "#e06633"
+  },
+  {
+    "numero": 29,
+    "simbolo": "Cu",
+    "nombre": "Cobre",
+    "masaAtomica": 63.546,
+    "categoria": "metal-transicion",
+    "grupo": 11,
+    "periodo": 4,
+    "bloque": "d",
+    "electronegatividad": 1.90,
+    "radioAtomico": 145,
+    "energiaIonizacion": 746,
+    "configuracionElectronica": "[Ar] 3d¹⁰ 4s¹",
+    "electronsPorCapa": [2, 8, 18, 1],
+    "puntoFusion": 1084.62,
+    "puntoEbullicion": 2562,
+    "densidad": 8.96,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": "Prehistórico",
+      "descubridor": "Conocido desde 9000 a.C."
+    },
+    "abundancia": "0.0068% en corteza terrestre",
+    "usos": ["Cables eléctricos", "Tuberías", "Monedas", "Aleaciones (bronce, latón)"],
+    "curiosidad": "Primer metal trabajado por humanos hace 11,000 años",
+    "toxicidad": "baja",
+    "estadoNatural": "Metal rojizo brillante",
+    "color": "#c88033"
+  },
+  {
+    "numero": 47,
+    "simbolo": "Ag",
+    "nombre": "Plata",
+    "masaAtomica": 107.868,
+    "categoria": "metal-transicion",
+    "grupo": 11,
+    "periodo": 5,
+    "bloque": "d",
+    "electronegatividad": 1.93,
+    "radioAtomico": 165,
+    "energiaIonizacion": 731,
+    "configuracionElectronica": "[Kr] 4d¹⁰ 5s¹",
+    "electronsPorCapa": [2, 8, 18, 18, 1],
+    "puntoFusion": 961.78,
+    "puntoEbullicion": 2162,
+    "densidad": 10.501,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": "Prehistórico",
+      "descubridor": "Conocido desde 5000 a.C."
+    },
+    "abundancia": "0.000008% en corteza terrestre",
+    "usos": ["Joyería", "Monedas", "Fotografía", "Espejos", "Antibacteriano"],
+    "curiosidad": "El mejor conductor de electricidad y calor de todos los metales",
+    "toxicidad": "baja",
+    "estadoNatural": "Metal blanco brillante",
+    "color": "#c0c0c0"
+  },
+  {
+    "numero": 79,
+    "simbolo": "Au",
+    "nombre": "Oro",
+    "masaAtomica": 196.967,
+    "categoria": "metal-transicion",
+    "grupo": 11,
+    "periodo": 6,
+    "bloque": "d",
+    "electronegatividad": 2.54,
+    "radioAtomico": 174,
+    "energiaIonizacion": 890,
+    "configuracionElectronica": "[Xe] 4f¹⁴ 5d¹⁰ 6s¹",
+    "electronsPorCapa": [2, 8, 18, 32, 18, 1],
+    "puntoFusion": 1064.18,
+    "puntoEbullicion": 2856,
+    "densidad": 19.282,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": "Prehistórico",
+      "descubridor": "Conocido desde 6000 a.C."
+    },
+    "abundancia": "0.0000004% en corteza terrestre",
+    "usos": ["Joyería", "Electrónica", "Inversión", "Medicina dental"],
+    "curiosidad": "Todo el oro extraído en la historia cabría en un cubo de 21 metros",
+    "toxicidad": "nula",
+    "estadoNatural": "Metal amarillo brillante",
+    "color": "#ffd123"
+  },
+  {
+    "numero": 80,
+    "simbolo": "Hg",
+    "nombre": "Mercurio",
+    "masaAtomica": 200.592,
+    "categoria": "metal-transicion",
+    "grupo": 12,
+    "periodo": 6,
+    "bloque": "d",
+    "electronegatividad": 2.00,
+    "radioAtomico": 171,
+    "energiaIonizacion": 1007,
+    "configuracionElectronica": "[Xe] 4f¹⁴ 5d¹⁰ 6s²",
+    "electronsPorCapa": [2, 8, 18, 32, 18, 2],
+    "puntoFusion": -38.83,
+    "puntoEbullicion": 356.73,
+    "densidad": 13.5336,
+    "estadoEstandar": "liquido",
+    "descubrimiento": {
+      "año": "Prehistórico",
+      "descubridor": "Conocido desde la antigüedad"
+    },
+    "abundancia": "0.000008% en corteza terrestre",
+    "usos": ["Termómetros antiguos", "Amalgamas dentales", "Lámparas fluorescentes"],
+    "curiosidad": "Único metal líquido a temperatura ambiente",
+    "toxicidad": "alta",
+    "estadoNatural": "Líquido plateado",
+    "color": "#b8b8d0"
+  },
+  {
+    "numero": 82,
+    "simbolo": "Pb",
+    "nombre": "Plomo",
+    "masaAtomica": 207.2,
+    "categoria": "post-transicion",
+    "grupo": 14,
+    "periodo": 6,
+    "bloque": "p",
+    "electronegatividad": 2.33,
+    "radioAtomico": 180,
+    "energiaIonizacion": 716,
+    "configuracionElectronica": "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p²",
+    "electronsPorCapa": [2, 8, 18, 32, 18, 4],
+    "puntoFusion": 327.46,
+    "puntoEbullicion": 1749,
+    "densidad": 11.342,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": "Prehistórico",
+      "descubridor": "Conocido desde 7000 a.C."
+    },
+    "abundancia": "0.0014% en corteza terrestre",
+    "usos": ["Baterías", "Blindaje contra radiación", "Tuberías antiguas"],
+    "curiosidad": "Usado en la antigua Roma para tuberías y utensilios",
+    "toxicidad": "alta",
+    "estadoNatural": "Metal gris azulado denso",
+    "color": "#575961"
+  },
+  {
+    "numero": 92,
+    "simbolo": "U",
+    "nombre": "Uranio",
+    "masaAtomica": 238.029,
+    "categoria": "actinido",
+    "grupo": null,
+    "periodo": 7,
+    "bloque": "f",
+    "electronegatividad": 1.38,
+    "radioAtomico": 175,
+    "energiaIonizacion": 597,
+    "configuracionElectronica": "[Rn] 5f³ 6d¹ 7s²",
+    "electronsPorCapa": [2, 8, 18, 32, 21, 9, 2],
+    "puntoFusion": 1135,
+    "puntoEbullicion": 4131,
+    "densidad": 18.95,
+    "estadoEstandar": "solido",
+    "descubrimiento": {
+      "año": 1789,
+      "descubridor": "Martin Heinrich Klaproth"
+    },
+    "abundancia": "0.00027% en corteza terrestre",
+    "usos": ["Combustible nuclear", "Armas nucleares", "Fechado radiométrico"],
+    "curiosidad": "Se forma en explosiones de supernovas",
+    "toxicidad": "alta",
+    "estadoNatural": "Metal plateado radioactivo",
+    "color": "#008fff"
+  }
+];
+
+        // Componente principal
+        function App() {
+            const [selectedElement, setSelectedElement] = useState(null);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [filterCategory, setFilterCategory] = useState(null);
+
+            const categories = [
+                { id: 'metal-alcalino', name: 'Metales Alcalinos' },
+                { id: 'metal-alcalinoterreo', name: 'Alcalinotérreos' },
+                { id: 'metal-transicion', name: 'Metales de Transición' },
+                { id: 'post-transicion', name: 'Post-transición' },
+                { id: 'metaloide', name: 'Metaloides' },
+                { id: 'no-metal', name: 'No Metales' },
+                { id: 'halogeno', name: 'Halógenos' },
+                { id: 'gas-noble', name: 'Gases Nobles' },
+                { id: 'actinido', name: 'Actínidos' }
+            ];
+
+            const filteredElements = elementsData.filter(element => {
+                const matchesSearch = 
+                    element.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    element.simbolo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    element.numero.toString().includes(searchTerm);
+                
+                const matchesCategory = !filterCategory || element.categoria === filterCategory;
+                
+                return matchesSearch && matchesCategory;
+            });
+
+            const shouldDim = (element) => {
+                if (searchTerm && !filteredElements.includes(element)) return true;
+                if (filterCategory && element.categoria !== filterCategory) return true;
+                return false;
+            };
+
+            return (
+                <div className="app">
+                    <header>
+                        <h1>ELEMENTA<span style={{color: 'var(--accent-yellow)'}}>QR</span></h1>
+                        <p className="subtitle">Tabla Periódica Interactiva</p>
+                    </header>
+
+                    <div className="controls">
+                        <div className="search-box">
+                            <input
+                                type="text"
+                                placeholder="Buscar elemento..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <div className="filter-group">
+                            <button 
+                                className={`filter-btn ${filterCategory === null ? 'active' : ''}`}
+                                onClick={() => setFilterCategory(null)}
+                            >
+                                Todos
+                            </button>
+                            {categories.map(cat => (
+                                <button
+                                    key={cat.id}
+                                    className={`filter-btn ${filterCategory === cat.id ? 'active' : ''}`}
+                                    onClick={() => setFilterCategory(filterCategory === cat.id ? null : cat.id)}
+                                >
+                                    {cat.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <PeriodicTable 
+                        elements={elementsData}
+                        onElementClick={setSelectedElement}
+                        shouldDim={shouldDim}
+                    />
+
+                    <Legend />
+
+                    {selectedElement && (
+                        <ElementModal 
+                            element={selectedElement}
+                            onClose={() => setSelectedElement(null)}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        // Componente de la tabla periódica
+        function PeriodicTable({ elements, onElementClick, shouldDim }) {
+            // Generar grid de 18x7
+            const grid = [];
+            
+            elements.forEach(element => {
+                const row = element.periodo - 1;
+                const col = element.grupo ? element.grupo - 1 : 0;
+                
+                if (!grid[row]) grid[row] = [];
+                grid[row][col] = element;
+            });
+
+            return (
+                <div className="periodic-table">
+                    {elements.map(element => (
+                        <ElementCard 
+                            key={element.numero}
+                            element={element}
+                            onClick={() => onElementClick(element)}
+                            dimmed={shouldDim(element)}
+                        />
+                    ))}
+                </div>
+            );
+        }
+
+        // Componente de tarjeta de elemento
+        function ElementCard({ element, onClick, dimmed }) {
+            return (
+                <div 
+                    className={`element-card ${element.categoria} ${dimmed ? 'dimmed' : ''}`}
+                    onClick={onClick}
+                    style={{ 
+                        gridColumn: element.grupo || 'auto',
+                        gridRow: element.periodo
+                    }}
+                >
+                    <div className="element-number">{element.numero}</div>
+                    <div className="element-symbol">{element.simbolo}</div>
+                    <div className="element-name">{element.nombre}</div>
+                    <div className="element-mass">{element.masaAtomica.toFixed(3)}</div>
+                </div>
+            );
+        }
+
+        // Componente del modal de elemento
+        function ElementModal({ element, onClose }) {
+            const categoryNames = {
+                'metal-alcalino': 'Metal Alcalino',
+                'metal-alcalinoterreo': 'Metal Alcalinotérreo',
+                'metal-transicion': 'Metal de Transición',
+                'post-transicion': 'Post-transición',
+                'metaloide': 'Metaloide',
+                'no-metal': 'No Metal',
+                'halogeno': 'Halógeno',
+                'gas-noble': 'Gas Noble',
+                'actinido': 'Actínido'
+            };
+
+            useEffect(() => {
+                const handleEscape = (e) => {
+                    if (e.key === 'Escape') onClose();
+                };
+                window.addEventListener('keydown', handleEscape);
+                return () => window.removeEventListener('keydown', handleEscape);
+            }, [onClose]);
+
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="close-btn" onClick={onClose}>×</button>
+                        
+                        <div className="modal-header">
+                            <div className="modal-element-header">
+                                <div className={`modal-element-symbol ${element.categoria}`}>
+                                    {element.simbolo}
+                                </div>
+                                <div className="modal-element-info">
+                                    <h2>{element.nombre}</h2>
+                                    <div className="modal-element-number">
+                                        Número Atómico: {element.numero}
+                                    </div>
+                                    <span className="modal-category">
+                                        {categoryNames[element.categoria]}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="modal-body">
+                            <div className="info-grid">
+                                <div className="info-item">
+                                    <div className="info-label">Masa Atómica</div>
+                                    <div className="info-value">{element.masaAtomica} u</div>
+                                </div>
+                                <div className="info-item">
+                                    <div className="info-label">Electronegatividad</div>
+                                    <div className="info-value">{element.electronegatividad || 'N/A'}</div>
+                                </div>
+                                <div className="info-item">
+                                    <div className="info-label">Radio Atómico</div>
+                                    <div className="info-value">{element.radioAtomico} pm</div>
+                                </div>
+                                <div className="info-item">
+                                    <div className="info-label">Energía de Ionización</div>
+                                    <div className="info-value">{element.energiaIonizacion} kJ/mol</div>
+                                </div>
+                                <div className="info-item">
+                                    <div className="info-label">Punto de Fusión</div>
+                                    <div className="info-value">{element.puntoFusion}°C</div>
+                                </div>
+                                <div className="info-item">
+                                    <div className="info-label">Punto de Ebullición</div>
+                                    <div className="info-value">{element.puntoEbullicion}°C</div>
+                                </div>
+                                <div className="info-item">
+                                    <div className="info-label">Densidad</div>
+                                    <div className="info-value">{element.densidad} g/cm³</div>
+                                </div>
+                                <div className="info-item">
+                                    <div className="info-label">Estado Estándar</div>
+                                    <div className="info-value">{element.estadoEstandar}</div>
+                                </div>
+                            </div>
+
+                            <div className="section">
+                                <h3 className="section-title">Configuración Electrónica</h3>
+                                <div className="electron-config">
+                                    {element.configuracionElectronica}
+                                </div>
+                            </div>
+
+                            <div className="section">
+                                <h3 className="section-title">Diagrama de Capas Electrónicas</h3>
+                                <div className="orbital-diagram">
+                                    {element.electronsPorCapa.map((count, index) => (
+                                        <div key={index} className="orbital">
+                                            <div className="orbital-label">Capa {index + 1}</div>
+                                            <div className="electron-shell">
+                                                <span style={{fontSize: '1.2rem', fontWeight: 'bold'}}>
+                                                    {count}e⁻
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="section">
+                                <h3 className="section-title">Descubrimiento</h3>
+                                <div className="info-grid">
+                                    <div className="info-item">
+                                        <div className="info-label">Año</div>
+                                        <div className="info-value">{element.descubrimiento.año}</div>
+                                    </div>
+                                    <div className="info-item">
+                                        <div className="info-label">Descubridor</div>
+                                        <div className="info-value" style={{fontSize: '1rem'}}>
+                                            {element.descubrimiento.descubridor}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="section">
+                                <h3 className="section-title">Usos Principales</h3>
+                                <div className="uses-list">
+                                    {element.usos.map((uso, index) => (
+                                        <span key={index} className="use-tag">{uso}</span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="section">
+                                <h3 className="section-title">Datos Curiosos</h3>
+                                <div className="curiosity-box">
+                                    💡 {element.curiosidad}
+                                </div>
+                            </div>
+
+                            <div className="info-grid">
+                                <div className="info-item">
+                                    <div className="info-label">Abundancia</div>
+                                    <div className="info-value" style={{fontSize: '0.95rem'}}>
+                                        {element.abundancia}
+                                    </div>
+                                </div>
+                                <div className="info-item">
+                                    <div className="info-label">Toxicidad</div>
+                                    <div className="info-value" style={{
+                                        color: element.toxicidad === 'alta' ? '#ff4444' : 
+                                               element.toxicidad === 'media' ? '#ffaa00' : '#44ff44'
+                                    }}>
+                                        {element.toxicidad.toUpperCase()}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Componente de leyenda
+        function Legend() {
+            const legendItems = [
+                { color: 'var(--metal-alcalino)', label: 'Metales Alcalinos' },
+                { color: 'var(--metal-alcalinoterreo)', label: 'Alcalinotérreos' },
+                { color: 'var(--metal-transicion)', label: 'Metales de Transición' },
+                { color: 'var(--post-transicion)', label: 'Post-transición' },
+                { color: 'var(--metaloide)', label: 'Metaloides' },
+                { color: 'var(--no-metal)', label: 'No Metales' },
+                { color: 'var(--halogeno)', label: 'Halógenos' },
+                { color: 'var(--gas-noble)', label: 'Gases Nobles' },
+                { color: 'var(--actinido)', label: 'Actínidos' }
+            ];
+
+            return (
+                <div className="legend">
+                    {legendItems.map((item, index) => (
+                        <div key={index} className="legend-item">
+                            <div 
+                                className="legend-color" 
+                                style={{ 
+                                    backgroundColor: item.color,
+                                    borderColor: item.color 
+                                }}
+                            />
+                            <span className="legend-label">{item.label}</span>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        // Renderizar la aplicación
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
